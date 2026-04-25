@@ -1,39 +1,10 @@
-const screens = {
-  story: document.getElementById('screen-story'),
-  fishing: document.getElementById('screen-fishing'),
-  lesson: document.getElementById('screen-lesson')
-};
-
-const scenes = [
-  {speaker:'Narrátor', avatar:'N', text:'A sokaság Jézushoz tódult, és hallgatta Isten igéjét.', choices:[]},
-  {speaker:'Jézus', avatar:'J', text:'Evezz a mélyre.', choices:[]},
-  {speaker:'Péter', avatar:'P', text:'Egész éjjel fáradtunk...', choices:[
-    {t:'De a te szavadra', ok:true},
-    {t:'Most nincs értelme', ok:false},
-    {t:'Máskor megpróbáljuk', ok:false}
-  ]},
-  {speaker:'Narrátor', avatar:'N', text:'A hálók megteltek.', choices:[]},
-  {speaker:'Jézus', avatar:'J', text:'Ne félj. Mostantól embereket fogsz halászni.', choices:[]}
-];
-
-let idx = 0;
-const avatar = document.getElementById('avatar');
-const speaker = document.getElementById('speaker');
-const text = document.getElementById('storyText');
-const choices = document.getElementById('choices');
-
-function renderScene(){
-  const s = scenes[idx];
-  avatar.textContent = s.avatar;
-  speaker.textContent = s.speaker;
-  text.textContent = s.text;
-  choices.innerHTML='';
-  s.choices.forEach(c=>{
-    const b=document.createElement('button');b.className='choice-btn';b.textContent=c.t;
-    b.onclick=()=>{if(!c.ok){b.classList.add('disabled')}else{idx++;renderScene()}};
-    choices.appendChild(b);
-  });
-  if(s.choices.length===0 && idx<scenes.length-1){setTimeout(()=>{idx++;renderScene()},2000)}
-  if(idx===scenes.length-1){setTimeout(()=>{screens.story.classList.remove('active');screens.fishing.classList.add('active')},2000)}
-}
-renderScene();
+const S={story:document.getElementById('story'),fishing:document.getElementById('fishing'),lesson:document.getElementById('lesson')};const A=new (window.AudioContext||window.webkitAudioContext)();const beep=f=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=f;g.gain.value=.05;o.connect(g).connect(A.destination);o.start();o.stop(A.currentTime+.08)};
+// STORY
+const STORY=[{av:'N',sp:'Narrátor',tx:'A sokaság Jézushoz tódult és hallgatta Isten igéjét.',v:'lake'},{av:'J',sp:'Jézus',tx:'Evezz a mélyre.',v:'lake'},{av:'P',sp:'Péter',tx:'Egész éjjel fáradtunk...',v:'deep',c:[{t:'De a te szavadra',ok:1},{t:'Most nincs értelme',ok:0},{t:'Máskor',ok:0}]},{av:'N',sp:'Narrátor',tx:'A hálók megteltek.',v:'miracle'},{av:'J',sp:'Jézus',tx:'Ne félj. Mostantól embereket fogsz halászni.',v:'lake'}];let i=0;
+const render=()=>{const s=STORY[i];S.story.innerHTML=`<div class='card grid'><div class='visual'><img src='assets/svg/${s.v}.svg'/></div><div><div class='dialog'><div class='avatar'>${s.av}</div><div><strong>${s.sp}</strong><p>${s.tx}</p></div></div><div class='choices'></div></div></div>`;const ch=S.story.querySelector('.choices');(s.c||[]).forEach(o=>{const b=document.createElement('button');b.className='choice';b.textContent=o.t;b.onclick=()=>{if(o.ok){beep(880);i++;render()}else{beep(220);b.classList.add('wrong')}};ch.appendChild(b)});if(!s.c){setTimeout(()=>{i++;i<STORY.length?render():startFishing()},1200)}};render();
+// FISHING
+function startFishing(){S.story.classList.remove('active');S.fishing.classList.add('active');S.fishing.innerHTML=`<div class='card'><div class='arena' id='a'></div><button class='btn'>Meghívás</button></div>`;const a=document.getElementById('a');setInterval(()=>{const p=document.createElement('div');p.className='npc';p.textContent='PERSON';p.style.top=Math.random()*260+'px';a.appendChild(p);setTimeout(()=>p.remove(),7000)},1500);
+// LESSON after 8s
+setTimeout(startLesson,8000)}
+// LESSON
+function startLesson(){S.fishing.classList.remove('active');S.lesson.classList.add('active');const steps=['Fáradtság','Jézus megszólít','Tanítás','Engedelmesség','Csoda','Felismerés','Elhívás','Követés'];S.lesson.innerHTML=`<div class='card'><div class='seq' id='seq'></div><div class='slot'>Ide húzd</div></div>`;const seq=document.getElementById('seq'),slot=document.querySelector('.slot');let k=0;steps.sort(()=>Math.random()-.5).forEach(t=>{const d=document.createElement('div');d.className='tile';d.textContent=t;d.draggable=!0;d.ondragstart=e=>e.dataTransfer.setData('t',t);seq.appendChild(d)});slot.ondragover=e=>e.preventDefault();slot.ondrop=e=>{const t=e.dataTransfer.getData('t');if(t===steps[k]){beep(660);slot.textContent=t;k++}else{beep(200)}}}
