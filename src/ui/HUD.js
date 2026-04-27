@@ -8,6 +8,7 @@ export class HUD {
 
   mount() {
     const host = getOverlayRoot();
+
     if (!host) {
       throw new Error('Overlay root was not found.');
     }

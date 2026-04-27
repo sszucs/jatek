@@ -1,13 +1,11 @@
 :root {
   color-scheme: dark;
-  --bg-top: #172433;
-  --bg-bottom: #0a0f15;
-  --text: #f3f7fa;
+  --bg-top: #182635;
+  --bg-bottom: #0a0f16;
+  --text: #f2f5f7;
   --text-muted: #bfd0db;
-  --glass-fill: rgba(255, 255, 255, 0.1);
   --glass-stroke: rgba(255, 255, 255, 0.16);
-  --glass-highlight: rgba(255, 255, 255, 0.22);
-  --shadow: 0 18px 56px rgba(0, 0, 0, 0.28);
+  --glass-shadow: 0 18px 56px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -89,61 +87,40 @@ body {
     radial-gradient(
       circle at 50% 44%,
       rgba(7, 10, 14, 0.08),
-      rgba(7, 10, 14, 0.22) 42%,
+      rgba(7, 10, 14, 0.2) 46%,
       rgba(7, 10, 14, 0.05) 72%,
       rgba(7, 10, 14, 0) 100%
     );
   opacity: 0;
-  transition: opacity var(--fade-in-ms, 1040ms) ease;
+  transition: opacity var(--fade-in-ms, 980ms) ease;
 }
 
 .message-card {
   position: absolute;
-  width: min(78vw, 320px);
+  width: min(78vw, 312px);
+  max-width: 312px;
   min-width: 240px;
-  max-width: 360px;
   transform: translate(-50%, -50%);
-  padding: 20px 18px 22px;
-  border-radius: 26px;
+  padding: 18px 18px 20px;
+  border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.155), rgba(255, 255, 255, 0.082));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.145), rgba(255, 255, 255, 0.082));
   border: 1px solid var(--glass-stroke);
-  box-shadow: var(--shadow);
+  box-shadow: var(--glass-shadow);
   backdrop-filter: blur(22px) saturate(126%);
   -webkit-backdrop-filter: blur(22px) saturate(126%);
   opacity: 0;
   filter: blur(10px);
   transition:
-    opacity var(--fade-in-ms, 1040ms) ease,
-    transform var(--fade-in-ms, 1040ms) ease,
-    filter var(--fade-in-ms, 1040ms) ease,
-    border-color var(--fade-in-ms, 1040ms) ease,
-    box-shadow var(--fade-in-ms, 1040ms) ease;
-}
-
-.message-card::before {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
-  pointer-events: none;
-}
-
-.message-card::after {
-  content: '';
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 12px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
-  opacity: 0.65;
-  pointer-events: none;
+    opacity var(--fade-in-ms, 980ms) ease,
+    transform var(--fade-in-ms, 980ms) ease,
+    filter var(--fade-in-ms, 980ms) ease,
+    border-color var(--fade-in-ms, 980ms) ease,
+    background-color var(--fade-in-ms, 980ms) ease;
 }
 
 .message-card[data-layout='between'] {
-  transform: translate(-50%, -50%) translateY(18px);
+  transform: translate(-50%, -50%) translateY(16px);
 }
 
 .message-card[data-layout='presence'] {
@@ -151,17 +128,15 @@ body {
 }
 
 .message-card[data-mode='connection'] {
-  border-color: rgba(135, 221, 225, 0.24);
-  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(131, 221, 225, 0.03);
+  border-color: rgba(135, 215, 221, 0.22);
   background:
-    linear-gradient(180deg, rgba(174, 238, 241, 0.14), rgba(255, 255, 255, 0.08));
+    linear-gradient(180deg, rgba(174, 236, 240, 0.132), rgba(255, 255, 255, 0.082));
 }
 
 .message-card[data-mode='stillness'] {
-  border-color: rgba(200, 213, 232, 0.22);
-  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(184, 200, 223, 0.025);
+  border-color: rgba(199, 213, 231, 0.2);
   background:
-    linear-gradient(180deg, rgba(217, 225, 236, 0.11), rgba(255, 255, 255, 0.07));
+    linear-gradient(180deg, rgba(215, 223, 234, 0.112), rgba(255, 255, 255, 0.072));
 }
 
 .message-presence.is-preparing {
@@ -193,16 +168,16 @@ body {
 
 .message-presence.is-hidden .message-presence__veil {
   opacity: 0;
-  transition: opacity var(--fade-out-ms, 1320ms) ease;
+  transition: opacity var(--fade-out-ms, 1260ms) ease;
 }
 
 .message-presence.is-hidden .message-card {
   opacity: 0;
   filter: blur(8px);
   transition:
-    opacity var(--fade-out-ms, 1320ms) ease,
-    transform var(--fade-out-ms, 1320ms) ease,
-    filter var(--fade-out-ms, 1320ms) ease;
+    opacity var(--fade-out-ms, 1260ms) ease,
+    transform var(--fade-out-ms, 1260ms) ease,
+    filter var(--fade-out-ms, 1260ms) ease;
 }
 
 .message-presence.is-hidden .message-card[data-layout='between'] {
@@ -216,16 +191,17 @@ body {
 .message-card__text {
   margin: 0;
   font-size: 17px;
-  line-height: 1.66;
+  line-height: 1.64;
   letter-spacing: 0.01em;
-  color: rgba(248, 251, 253, 0.975);
+  color: rgba(247, 250, 252, 0.97);
   text-align: center;
   text-wrap: balance;
 }
 
 @media (min-width: 768px) {
   .message-card {
-    width: min(42vw, 360px);
+    width: min(42vw, 364px);
+    max-width: 364px;
     padding: 22px 22px 24px;
   }
 

@@ -23,17 +23,13 @@ export class GameScene extends Phaser.Scene {
     this.mode = MODES.CONNECTION;
     this.player = null;
     this.characters = [];
+    this.worldGlow = null;
     this.backdropGraphics = null;
     this.ambientGraphics = null;
     this.islandGraphics = null;
     this.monolithGraphics = null;
     this.connectionGraphics = null;
     this.settledConnectionGraphics = null;
-    this.worldGlow = null;
-    this.worldSettling = false;
-    this.isInterrupted = false;
-    this.canMove = false;
-    this.entryLockUntil = 0;
 
     this.dragActive = false;
     this.dragStart = new Phaser.Math.Vector2(0, 0);
@@ -42,13 +38,19 @@ export class GameScene extends Phaser.Scene {
     this.desiredVector = new Phaser.Math.Vector2(0, 0);
     this.motionVector = new Phaser.Math.Vector2(0, 0);
 
+    this.canMove = false;
+    this.isInterrupted = false;
+    this.worldSettling = false;
+    this.entryLockUntil = 0;
+
     this.keys = null;
     this.visibilityHandler = null;
+    this.pageHideHandler = null;
   }
 
   create() {
     this.mode = this.registry.get('mode') || MODES.CONNECTION;
-    this.cameras.main.setBackgroundColor('#0c131b');
+    this.cameras.main.setBackgroundColor('#0d1520');
     this.cameras.main.setBounds(0, 0, WORLD.width, WORLD.height);
 
     this.buildWorld();
@@ -73,7 +75,7 @@ export class GameScene extends Phaser.Scene {
     this.worldGlow = this.add.circle(
       WORLD.width * 0.5,
       WORLD.height * 0.14,
-      300,
+      304,
       palette.accent,
       this.mode === MODES.CONNECTION ? 0.058 : 0.026
     );
@@ -128,8 +130,8 @@ export class GameScene extends Phaser.Scene {
     g.clear();
 
     const steps = 24;
-    for (let index = 0; index < steps; index += 1) {
-      const t = index / (steps - 1);
+    for (let i = 0; i < steps; i += 1) {
+      const t = i / (steps - 1);
       const color = Phaser.Display.Color.Interpolate.ColorWithColor(
         Phaser.Display.Color.ValueToColor(COLORS.worldTop),
         Phaser.Display.Color.ValueToColor(COLORS.worldBottom),
@@ -138,7 +140,7 @@ export class GameScene extends Phaser.Scene {
       );
 
       g.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1);
-      g.fillRect(0, (WORLD.height / steps) * index, WORLD.width, WORLD.height / steps + 4);
+      g.fillRect(0, (WORLD.height / steps) * i, WORLD.width, WORLD.height / steps + 4);
     }
   }
 
@@ -158,7 +160,7 @@ export class GameScene extends Phaser.Scene {
       this.tweens.add({
         targets: this.ambientGraphics,
         alpha: { from: 0.72, to: 1 },
-        duration: 4800,
+        duration: 5000,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
@@ -167,7 +169,7 @@ export class GameScene extends Phaser.Scene {
       this.tweens.add({
         targets: this.worldGlow,
         alpha: { from: 0.02, to: 0.034 },
-        duration: 9600,
+        duration: 9800,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
@@ -178,17 +180,27 @@ export class GameScene extends Phaser.Scene {
   buildPlayer() {
     const startX = WORLD.width * 0.5;
     const startY = WORLD.height * 0.89;
-    const palette = getModePalette(this.mode);
 
     this.player = this.add.container(startX, startY);
     this.player.velocity = new Phaser.Math.Vector2(0, 0);
     this.player.radius = WORLD.playerRadius;
 
-    this.player.aura = this.add.circle(0, 0, 28, palette.glow, this.mode === MODES.CONNECTION ? 0.15 : 0.1);
-    this.player.body = this.add.circle(0, 0, WORLD.playerRadius, 0xffffff, 0.92);
-    this.player.core = this.add.circle(0, 0, 6, palette.accent, 0.86);
+    const palette = getModePalette(this.mode);
 
-    this.player.add([this.player.aura, this.player.body, this.player.core]);
+    const aura = this.add.circle(
+      0,
+      0,
+      28,
+      palette.glow,
+      this.mode === MODES.CONNECTION ? 0.15 : 0.1
+    );
+    const body = this.add.circle(0, 0, WORLD.playerRadius, 0xffffff, 0.92);
+    const core = this.add.circle(0, 0, 6, palette.accent, 0.86);
+
+    this.player.aura = aura;
+    this.player.body = body;
+    this.player.core = core;
+    this.player.add([aura, body, core]);
   }
 
   buildCharacters() {
@@ -201,26 +213,29 @@ export class GameScene extends Phaser.Scene {
       container.encountered = encounteredIds.has(entry.id);
       container.setDepth(2);
 
-      container.aura = this.add.circle(
+      const aura = this.add.circle(
         0,
         0,
         34,
         palette.glow,
         container.encountered ? 0.06 : this.mode === MODES.CONNECTION ? 0.11 : 0.075
       );
-      container.ring = this.add.circle(
+
+      const ring = this.add.circle(
         0,
         0,
         WORLD.characterRadius + 6,
         palette.accent,
         container.encountered ? 0.045 : 0.08
       );
-      container.ring.setStrokeStyle(
+
+      ring.setStrokeStyle(
         1.1,
         palette.accent,
         container.encountered ? 0.14 : this.mode === MODES.CONNECTION ? 0.28 : 0.18
       );
-      container.body = this.add.circle(
+
+      const body = this.add.circle(
         0,
         0,
         WORLD.characterRadius,
@@ -228,11 +243,14 @@ export class GameScene extends Phaser.Scene {
         container.encountered ? 0.48 : 0.72
       );
 
-      container.add([container.aura, container.ring, container.body]);
+      container.aura = aura;
+      container.ring = ring;
+      container.body = body;
+      container.add([aura, ring, body]);
 
       if (!container.encountered) {
         this.tweens.add({
-          targets: [container.aura, container.ring],
+          targets: [aura, ring],
           alpha: {
             from: this.mode === MODES.CONNECTION ? 0.08 : 0.05,
             to: this.mode === MODES.CONNECTION ? 0.16 : 0.1
@@ -252,6 +270,7 @@ export class GameScene extends Phaser.Scene {
 
   setupCamera() {
     const cameraLerp = getCameraLerp(this.mode);
+
     this.cameras.main.startFollow(this.player, true, cameraLerp, cameraLerp);
     this.cameras.main.setZoom(CAMERA.zoom);
     this.cameras.main.setDeadzone(CAMERA.deadzoneWidth, CAMERA.deadzoneHeight);
@@ -316,7 +335,12 @@ export class GameScene extends Phaser.Scene {
       }
     };
 
+    this.pageHideHandler = () => {
+      this.beginWorldSettle();
+    };
+
     document.addEventListener('visibilitychange', this.visibilityHandler);
+    window.addEventListener('pagehide', this.pageHideHandler);
   }
 
   beginEntryLock() {
@@ -364,6 +388,7 @@ export class GameScene extends Phaser.Scene {
       (this.keys.up?.isDown || this.keys.upAlt?.isDown ? -1 : 0);
 
     this.keyboardVector.set(x, y);
+
     if (this.keyboardVector.lengthSq() > 0) {
       this.keyboardVector.normalize();
     }
@@ -371,7 +396,7 @@ export class GameScene extends Phaser.Scene {
 
   updateMovement() {
     const moveConfig = getMoveConfig(this.mode);
-    const canMove =
+    const isMovementAllowed =
       this.canMove &&
       this.time.now >= this.entryLockUntil &&
       !this.isInterrupted &&
@@ -379,7 +404,7 @@ export class GameScene extends Phaser.Scene {
 
     this.desiredVector.set(0, 0);
 
-    if (canMove) {
+    if (isMovementAllowed) {
       if (this.dragVector.lengthSq() > 0) {
         this.desiredVector.copy(this.dragVector);
       } else if (this.keyboardVector.lengthSq() > 0) {
@@ -388,7 +413,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     const desiredVelocity = this.desiredVector.clone().scale(moveConfig.speed);
-    const lerpAmount = desiredVelocity.lengthSq() > 0 ? moveConfig.accel : moveConfig.decel;
+    const lerpAmount =
+      desiredVelocity.lengthSq() > 0 ? moveConfig.accel : moveConfig.decel;
 
     this.motionVector.x = lerp(this.motionVector.x, desiredVelocity.x, lerpAmount);
     this.motionVector.y = lerp(this.motionVector.y, desiredVelocity.y, lerpAmount);
@@ -410,13 +436,16 @@ export class GameScene extends Phaser.Scene {
 
   updatePlayerVisuals() {
     const moveConfig = getMoveConfig(this.mode);
-    const strength = Math.min(1, this.motionVector.length() / moveConfig.speed);
+    const movementStrength = Math.min(1, this.motionVector.length() / moveConfig.speed);
 
-    this.player.aura.scale = 1 + strength * (this.mode === MODES.CONNECTION ? 0.07 : 0.035);
+    this.player.aura.scale = 1 + movementStrength * (this.mode === MODES.CONNECTION ? 0.07 : 0.035);
     this.player.aura.alpha =
-      this.mode === MODES.CONNECTION ? 0.13 + strength * 0.05 : 0.095 + strength * 0.02;
-    this.player.body.scale = 1 + strength * 0.022;
-    this.player.core.scale = 1 + strength * 0.04;
+      this.mode === MODES.CONNECTION
+        ? 0.13 + movementStrength * 0.05
+        : 0.095 + movementStrength * 0.02;
+
+    this.player.body.scale = 1 + movementStrength * 0.022;
+    this.player.core.scale = 1 + movementStrength * 0.04;
   }
 
   updateAtmosphere() {
@@ -432,43 +461,47 @@ export class GameScene extends Phaser.Scene {
   drawLivingConnections() {
     const palette = getModePalette(this.mode);
     const g = this.connectionGraphics;
-    const t = this.time.now * 0.001;
+    const time = this.time.now * 0.001;
 
     g.clear();
 
-    this.characters.forEach((character, index) => {
-      if (character.encountered) return;
+    const playerVisible = this.canMove || this.time.now < this.entryLockUntil;
 
-      const distanceToPlayer = Phaser.Math.Distance.Between(
-        this.player.x,
-        this.player.y,
-        character.x,
-        character.y
-      );
+    if (playerVisible) {
+      this.characters.forEach((character, index) => {
+        if (character.encountered) return;
 
-      if (distanceToPlayer <= 520) {
-        const alpha = Phaser.Math.Linear(0.02, 0.15, 1 - distanceToPlayer / 520);
-        const wave = 0.85 + Math.sin(t * 1.1 + index * 0.7) * 0.12;
+        const distance = Phaser.Math.Distance.Between(
+          this.player.x,
+          this.player.y,
+          character.x,
+          character.y
+        );
+
+        if (distance > 520) return;
+
+        const alpha = Phaser.Math.Linear(0.02, 0.15, 1 - distance / 520);
+        const wave = 0.85 + Math.sin(time * 1.1 + index * 0.7) * 0.12;
 
         g.lineStyle(1.05, palette.line, alpha * wave);
         g.beginPath();
         g.moveTo(this.player.x, this.player.y);
         g.lineTo(character.x, character.y);
         g.strokePath();
-      }
-    });
+      });
+    }
 
-    for (let index = 0; index < this.characters.length; index += 1) {
-      for (let nextIndex = index + 1; nextIndex < this.characters.length; nextIndex += 1) {
-        const a = this.characters[index];
-        const b = this.characters[nextIndex];
+    for (let i = 0; i < this.characters.length; i += 1) {
+      for (let j = i + 1; j < this.characters.length; j += 1) {
+        const a = this.characters[i];
+        const b = this.characters[j];
         if (a.encountered && b.encountered) continue;
 
         const distance = Phaser.Math.Distance.Between(a.x, a.y, b.x, b.y);
         if (distance > 620) continue;
 
         const alphaBase = Phaser.Math.Linear(0.018, 0.085, 1 - distance / 620);
-        const alpha = alphaBase * (0.82 + Math.sin(t * 0.62 + index * 0.52 + nextIndex * 0.4) * 0.1);
+        const alpha = alphaBase * (0.82 + Math.sin(time * 0.62 + i * 0.52 + j * 0.4) * 0.1);
 
         g.lineStyle(1, palette.line, alpha);
         g.beginPath();
@@ -485,16 +518,19 @@ export class GameScene extends Phaser.Scene {
     const encountered = this.characters.filter((character) => character.encountered);
 
     g.clear();
+
     if (encountered.length < 2) return;
 
-    for (let index = 0; index < encountered.length; index += 1) {
-      for (let nextIndex = index + 1; nextIndex < encountered.length; nextIndex += 1) {
-        const a = encountered[index];
-        const b = encountered[nextIndex];
+    for (let i = 0; i < encountered.length; i += 1) {
+      for (let j = i + 1; j < encountered.length; j += 1) {
+        const a = encountered[i];
+        const b = encountered[j];
         const distance = Phaser.Math.Distance.Between(a.x, a.y, b.x, b.y);
-        if (distance > 920) continue;
 
-        const alpha = Phaser.Math.Linear(0.02, 0.07, 1 - distance / 920);
+        if (distance > 900) continue;
+
+        const alpha = Phaser.Math.Linear(0.02, 0.07, 1 - distance / 900);
+
         g.lineStyle(1, palette.line, alpha);
         g.beginPath();
         g.moveTo(a.x, a.y);
@@ -531,10 +567,10 @@ export class GameScene extends Phaser.Scene {
     this.keyboardVector.set(0, 0);
     this.desiredVector.set(0, 0);
 
-    const payload = this.getNextMessage();
+    const messagePayload = this.getNextMessage();
     const messageScene = this.scene.get(SCENES.MESSAGE);
 
-    if (!payload || !messageScene?.present) {
+    if (!messagePayload || !messageScene?.present) {
       this.completeEncounter(character);
       return;
     }
@@ -544,19 +580,20 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({
       targets: [this.player.aura, character.aura],
       alpha: this.mode === MODES.CONNECTION ? 0.18 : 0.12,
-      duration: 440,
+      duration: 420,
       yoyo: true,
       ease: 'Sine.easeInOut'
     });
 
-    messageScene.present({
-      text: payload.text,
-      mode: this.mode,
-      anchor,
-      characterId: character.id
-    }).then(() => {
-      this.completeEncounter(character);
-    });
+    messageScene
+      .present({
+        text: messagePayload.text,
+        mode: this.mode,
+        anchor
+      })
+      .then(() => {
+        this.completeEncounter(character);
+      });
   }
 
   completeEncounter(character) {
@@ -564,13 +601,20 @@ export class GameScene extends Phaser.Scene {
     const palette = getModePalette(this.mode);
 
     character.body.setFillStyle(0xffffff, 0.48);
-    character.ring.setStrokeStyle(1, palette.accent, this.mode === MODES.CONNECTION ? 0.14 : 0.11);
-    character.aura.setFillStyle(palette.glow, this.mode === MODES.CONNECTION ? 0.065 : 0.05);
+    character.ring.setStrokeStyle(
+      1,
+      palette.accent,
+      this.mode === MODES.CONNECTION ? 0.14 : 0.11
+    );
+    character.aura.setFillStyle(
+      palette.glow,
+      this.mode === MODES.CONNECTION ? 0.065 : 0.05
+    );
 
-    const encounteredCharacters = [...(this.registry.get('encounteredCharacters') || [])];
-    if (!encounteredCharacters.includes(character.id)) {
-      encounteredCharacters.push(character.id);
-      this.registry.set('encounteredCharacters', encounteredCharacters);
+    const encountered = [...(this.registry.get('encounteredCharacters') || [])];
+    if (!encountered.includes(character.id)) {
+      encountered.push(character.id);
+      this.registry.set('encounteredCharacters', encountered);
     }
 
     this.time.delayedCall(TIMINGS.releaseSettleMs, () => {
@@ -581,10 +625,14 @@ export class GameScene extends Phaser.Scene {
   getNextMessage() {
     const queue = [...(this.registry.get('sessionMessageQueue') || [])];
     const used = [...(this.registry.get('sessionMessagesUsed') || [])];
+
     let nextId = queue.shift();
 
     if (!nextId) {
-      const remaining = messages.map((message) => message.id).filter((id) => !used.includes(id));
+      const remaining = messages
+        .map((message) => message.id)
+        .filter((id) => !used.includes(id));
+
       nextId = remaining[0] || messages[0]?.id || null;
     }
 
@@ -599,6 +647,7 @@ export class GameScene extends Phaser.Scene {
 
     this.registry.set('sessionMessageQueue', queue);
     this.registry.set('sessionMessagesUsed', used);
+
     return next;
   }
 
@@ -606,17 +655,19 @@ export class GameScene extends Phaser.Scene {
     if (this.mode === MODES.STILLNESS) {
       return {
         x: this.scale.gameSize.width * 0.5,
-        y: this.scale.gameSize.height * 0.445
+        y: this.scale.gameSize.height * 0.44
       };
     }
 
     const camera = this.cameras.main;
-    const x = ((this.player.x + character.x) * 0.5 - camera.worldView.x) * camera.zoom;
-    const y = ((this.player.y + character.y) * 0.5 - camera.worldView.y) * camera.zoom;
+    const internalX =
+      ((this.player.x + character.x) * 0.5 - camera.worldView.x) * camera.zoom;
+    const internalY =
+      ((this.player.y + character.y) * 0.5 - camera.worldView.y) * camera.zoom;
 
     return {
-      x: clamp(x, 66, this.scale.gameSize.width - 66),
-      y: clamp(y, 180, this.scale.gameSize.height - 244)
+      x: clamp(internalX, 66, this.scale.gameSize.width - 66),
+      y: clamp(internalY, 182, this.scale.gameSize.height - 238)
     };
   }
 
@@ -648,6 +699,11 @@ export class GameScene extends Phaser.Scene {
     if (this.visibilityHandler) {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
       this.visibilityHandler = null;
+    }
+
+    if (this.pageHideHandler) {
+      window.removeEventListener('pagehide', this.pageHideHandler);
+      this.pageHideHandler = null;
     }
   }
 }

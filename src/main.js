@@ -1,11 +1,11 @@
-import { GAME_CONFIG, SCENES } from './game.js';
+import { GAME_CONFIG } from './game.js';
 import { BootScene } from './scenes/BootScene.js';
 import { ModeSelectScene } from './scenes/ModeSelectScene.js';
 import { GameScene } from './scenes/GameScene.js';
 import { MessageScene } from './scenes/MessageScene.js';
 
 function createGame() {
-  return new Phaser.Game({
+  const config = {
     type: Phaser.AUTO,
     parent: 'game-root',
     width: GAME_CONFIG.baseWidth,
@@ -15,8 +15,8 @@ function createGame() {
       antialias: true,
       pixelArt: false,
       powerPreference: 'high-performance',
-      roundPixels: false,
-      clearBeforeRender: true
+      clearBeforeRender: true,
+      transparent: false
     },
     scale: {
       mode: Phaser.Scale.FIT,
@@ -29,16 +29,24 @@ function createGame() {
       smoothFactor: 0.14
     },
     scene: [BootScene, ModeSelectScene, GameScene, MessageScene]
-  });
+  };
+
+  return new Phaser.Game(config);
 }
 
-function boot() {
-  if (!window.Phaser) {
-    window.addEventListener('load', createGame, { once: true });
+function bootWhenReady() {
+  if (window.Phaser) {
+    createGame();
     return;
   }
 
-  createGame();
+  window.addEventListener(
+    'load',
+    () => {
+      createGame();
+    },
+    { once: true }
+  );
 }
 
-boot();
+bootWhenReady();

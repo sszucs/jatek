@@ -1,7 +1,9 @@
-import { GAME_CONFIG, MODES, clamp, gamePointToViewport } from '../game.js';
+import { MODES } from '../game.js';
 
 function wait(ms) {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
 }
 
 export class MessageCard {
@@ -11,8 +13,6 @@ export class MessageCard {
     this.card = null;
     this.textNode = null;
     this.mounted = false;
-    this.currentAnchor = null;
-    this.currentLayout = 'presence';
   }
 
   mount(parent) {
@@ -43,44 +43,21 @@ export class MessageCard {
   setPosition(anchor, layout) {
     if (!this.card) return;
 
-    this.currentAnchor = anchor;
-    this.currentLayout = layout;
-
-    const viewport = gamePointToViewport(anchor);
-    const widthLimit = Math.min(viewport.rect.width * 0.78, 360);
-    const xPadding = Math.min(24, viewport.rect.width * 0.05);
-    const yPadding = Math.min(32, viewport.rect.height * 0.06);
-    const minX = viewport.rect.left + xPadding + widthLimit * 0.5;
-    const maxX = viewport.rect.left + viewport.rect.width - xPadding - widthLimit * 0.5;
-    const minY = viewport.rect.top + yPadding + 66;
-    const maxY = viewport.rect.top + viewport.rect.height - yPadding - 96;
-
-    const x = clamp(viewport.x, minX, Math.max(minX, maxX));
-    const y = clamp(viewport.y, minY, Math.max(minY, maxY));
-
-    this.card.style.width = `min(78vw, ${Math.round(widthLimit)}px)`;
-    this.card.style.left = `${x}px`;
-    this.card.style.top = `${y}px`;
+    this.card.style.left = `${anchor.x}px`;
+    this.card.style.top = `${anchor.y}px`;
     this.card.dataset.layout = layout;
   }
 
-  refreshPosition() {
-    if (!this.currentAnchor) return;
-    this.setPosition(this.currentAnchor, this.currentLayout);
-  }
-
   async present({ text, mode, layout, anchor, fadeInMs, holdMs, fadeOutMs }) {
-    if (!this.mounted || !this.root || !this.card || !this.textNode) {
-      return;
-    }
+    if (!this.mounted || !this.root || !this.card || !this.textNode) return;
 
     this.textNode.textContent = text;
     this.card.dataset.mode = mode === MODES.CONNECTION ? 'connection' : 'stillness';
     this.card.dataset.layout = layout;
+    this.setPosition(anchor, layout);
+
     this.root.style.setProperty('--fade-in-ms', `${fadeInMs}ms`);
     this.root.style.setProperty('--fade-out-ms', `${fadeOutMs}ms`);
-
-    this.setPosition(anchor, layout);
 
     this.root.classList.remove('is-visible', 'is-hidden');
     this.root.classList.add('is-preparing');
@@ -95,7 +72,7 @@ export class MessageCard {
     this.root.classList.remove('is-visible');
     this.root.classList.add('is-hidden');
 
-    await wait(fadeOutMs + 50);
+    await wait(fadeOutMs + 40);
 
     this.root.classList.remove('is-hidden');
   }

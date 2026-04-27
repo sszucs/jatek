@@ -21,14 +21,16 @@ export class MessageScene extends Phaser.Scene {
 
     this.resizeHandler = () => {
       this.hud.refresh();
-      this.messageCard.refreshPosition();
     };
 
     this.scale.on('resize', this.resizeHandler);
-    window.addEventListener('resize', this.resizeHandler);
 
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.teardown, this);
-    this.events.once(Phaser.Scenes.Events.DESTROY, this.teardown, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.resizeHandler) {
+        this.scale.off('resize', this.resizeHandler);
+        this.resizeHandler = null;
+      }
+    });
   }
 
   async present({ text, mode, anchor }) {
@@ -39,10 +41,12 @@ export class MessageScene extends Phaser.Scene {
     this.presenting = true;
     this.registry.set('activeMessage', text);
 
+    const layout = mode === MODES.CONNECTION ? 'between' : 'presence';
+
     await this.messageCard.present({
       text,
       mode,
-      layout: mode === MODES.CONNECTION ? 'between' : 'presence',
+      layout,
       anchor,
       fadeInMs: TIMINGS.messageFadeInMs,
       holdMs: TIMINGS.messageHoldMs,
@@ -57,21 +61,18 @@ export class MessageScene extends Phaser.Scene {
     if (this.presenting) return;
     if (Math.random() > 0.12) return;
 
+    const exitNotes = this.registry.get('exitNotes') || [];
+    const note = exitNotes[0];
+
+    if (!note?.text) return;
+
     this.present({
-      text: 'Take what you received with you.',
+      text: note.text,
       mode: MODES.STILLNESS,
       anchor: {
         x: this.scale.gameSize.width * 0.5,
         y: this.scale.gameSize.height * 0.46
       }
     });
-  }
-
-  teardown() {
-    if (this.resizeHandler) {
-      this.scale.off('resize', this.resizeHandler);
-      window.removeEventListener('resize', this.resizeHandler);
-      this.resizeHandler = null;
-    }
   }
 }
