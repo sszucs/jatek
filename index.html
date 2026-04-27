@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html lang="hu">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Absztrakt Befogás – Játék</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div id="game">
-    <div id="status">
-      <div>Pont: <span id="score">0</span></div>
-      <div>Kattints a mezőre a befogáshoz</div>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <title>Quiet Passage</title>
+    <meta
+      name="description"
+      content="A contemplative mobile-first web game about presence, choice, and meaningful encounters."
+    />
+    <link rel="stylesheet" href="./assets/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+    <script type="module" src="./src/main.js"></script>
+  </head>
+  <body>
+    <div id="app-shell">
+      <div id="game-root" aria-label="Quiet Passage"></div>
+      <div id="overlay-root" aria-hidden="true"></div>
     </div>
-    <div id="playfield">
-      <div class="capture-zone"></div>
-    </div>
-    <div id="feedback" class="feedback"></div>
-  </div>
-  <script src="script.js"></script>
-</body>
+  </body>
 </html>
